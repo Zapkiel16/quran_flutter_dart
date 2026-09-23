@@ -1,7 +1,9 @@
-import 'package:quran_flutter/remote_resource.dart';
-import 'package:quran_flutter/surah_model.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
+import 'remote_resource.dart';
+import 'surah_model.dart';
+import 'detail_surah_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -11,62 +13,32 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final remoteResource = RemoteResource();
+  final RemoteResource remoteResource = RemoteResource();
 
-  final List<Datum> surahList = [];
-
+  List<Datum> surahList = [];
   bool isLoading = true;
+  String errorMessage = '';
 
   @override
   void initState() {
     super.initState();
-    fetchData();
+    getSurah();
   }
 
-  void fetchData() async {
+  Future<void> getSurah() async {
     try {
-      final result = await remoteResource.fetchQuran();
+      final data = await remoteResource.fetchQuran();
 
       setState(() {
-        surahList.addAll(result);
+        surahList = data;
         isLoading = false;
       });
     } catch (e) {
       setState(() {
+        errorMessage = e.toString();
         isLoading = false;
       });
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-        ),
-      );
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Center(
-          child: Text("Al-Qur'an"),
-        ),
-      ),
-      body: isLoading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-          : ListView.builder(
-              itemCount: surahList.length,
-              itemBuilder: (context, index) {
-                final surah = surahList[index];
-
-                return buildSurahCard(surah);
-              },
-            ),
-    );
   }
 
   Widget buildSurahCard(Datum surah) {
@@ -80,14 +52,10 @@ class _HomePageState extends State<HomePage> {
         horizontal: 16,
       ),
       decoration: BoxDecoration(
-        color: Theme.of(context)
-            .colorScheme
-            .secondaryContainer,
+        color: Theme.of(context).colorScheme.secondaryContainer,
         boxShadow: [
           BoxShadow(
-            color: Colors.blueGrey.withValues(
-              alpha: 0.5,
-            ),
+            color: Colors.blueGrey.withValues(alpha: 0.5),
             spreadRadius: 0.5,
             offset: const Offset(0, 0.5),
           ),
@@ -95,15 +63,21 @@ class _HomePageState extends State<HomePage> {
         borderRadius: BorderRadius.circular(20),
       ),
       child: InkWell(
+        borderRadius: BorderRadius.circular(20),
         onTap: () {
-          // Nanti pindah ke halaman detail
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => DetailSurahPage(
+                id: surah.number ?? 0,
+              ),
+            ),
+          );
         },
         child: Row(
           spacing: 8,
-          mainAxisAlignment:
-              MainAxisAlignment.spaceBetween,
-          crossAxisAlignment:
-              CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Stack(
               alignment: Alignment.center,
@@ -111,9 +85,7 @@ class _HomePageState extends State<HomePage> {
                 SvgPicture.asset(
                   'assets/icons/jewish-star.svg',
                   colorFilter: ColorFilter.mode(
-                    Theme.of(context)
-                        .colorScheme
-                        .secondary,
+                    Theme.of(context).colorScheme.secondary,
                     BlendMode.srcIn,
                   ),
                   width: 52,
@@ -121,7 +93,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 Center(
                   child: Text(
-                    '${surah.number}',
+                    surah.number.toString(),
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                     ),
@@ -133,10 +105,8 @@ class _HomePageState extends State<HomePage> {
             Expanded(
               flex: 2,
               child: Column(
-                mainAxisAlignment:
-                    MainAxisAlignment.center,
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     surah.englishName ?? '',
@@ -154,8 +124,7 @@ class _HomePageState extends State<HomePage> {
 
             Expanded(
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
                     surah.name ?? '',
@@ -165,7 +134,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   Text(
-                    '${surah.numberOfAyahs} Ayat',
+                    '${surah.numberOfAyahs ?? 0} Ayat',
                   ),
                 ],
               ),
@@ -173,6 +142,64 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Al-Quran',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+      body: isLoading
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : errorMessage.isNotEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        size: 50,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        errorMessage,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            isLoading = true;
+                            errorMessage = '';
+                          });
+
+                          getSurah();
+                        },
+                        child: const Text('Coba Lagi'),
+                      ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: getSurah,
+                  child: ListView.builder(
+                    itemCount: surahList.length,
+                    itemBuilder: (context, index) {
+                      return buildSurahCard(
+                        surahList[index],
+                      );
+                    },
+                  ),
+                ),
     );
   }
 }

@@ -1,98 +1,84 @@
-class SurahDetailModel {
-  final int? code;
-  final String? status;
-  final SurahDetailData? data;
+class DetailSurahModel {
+  int? code;
+  String? status;
+  DetailSurahData? data;
 
-  SurahDetailModel({
+  DetailSurahModel({
     this.code,
     this.status,
     this.data,
   });
 
-  factory SurahDetailModel.fromJson(Map<String, dynamic> json) {
-    return SurahDetailModel(
+  factory DetailSurahModel.fromJson(Map<String, dynamic> json) {
+    return DetailSurahModel(
       code: json['code'],
       status: json['status'],
       data: json['data'] != null
-          ? SurahDetailData.fromJson(json['data'])
+          ? DetailSurahData.fromJson(json['data'])
           : null,
     );
   }
 }
 
-class SurahDetailData {
-  final int? number;
-  final String? name;
-  final String? englishName;
-  final String? englishNameTranslation;
-  final int? numberOfAyahs;
-  final String? revelationType;
-  final List<Ayah>? ayahs;
+class DetailSurahData {
+  int? number;
+  String? name;
+  String? englishName;
+  String? englishNameTranslation;
+  int? numberOfAyahs;
+  String? revelationType;
+  List<Ayat> ayahs;
 
-  SurahDetailData({
+  DetailSurahData({
     this.number,
     this.name,
     this.englishName,
     this.englishNameTranslation,
     this.numberOfAyahs,
     this.revelationType,
-    this.ayahs,
+    this.ayahs = const [],
   });
 
-  factory SurahDetailData.fromJson(Map<String, dynamic> json) {
-    return SurahDetailData(
+  factory DetailSurahData.fromJson(Map<String, dynamic> json) {
+    return DetailSurahData(
       number: json['number'],
       name: json['name'],
       englishName: json['englishName'],
-      englishNameTranslation:
-          json['englishNameTranslation'],
+      englishNameTranslation: json['englishNameTranslation'],
       numberOfAyahs: json['numberOfAyahs'],
       revelationType: json['revelationType'],
       ayahs: json['ayahs'] != null
-          ? List<Ayah>.from(
+          ? List<Ayat>.from(
               json['ayahs'].map(
-                (x) => Ayah.fromJson(x),
+                (x) => Ayat.fromJson(x),
               ),
             )
-          : null,
+          : [],
     );
   }
 }
 
-class Ayah {
-  final int? number;
-  final String? text;
-  final int? numberInSurah;
-  final int? juz;
-  final int? manzil;
-  final int? page;
-  final int? ruku;
-  final int? hizbQuarter;
-  final bool? sajda;
+class Ayat {
+  int? number;
+  int? numberInSurah;
+  String? text;
+  String? audio;
+  String? translation;
 
-  Ayah({
+  Ayat({
     this.number,
-    this.text,
     this.numberInSurah,
-    this.juz,
-    this.manzil,
-    this.page,
-    this.ruku,
-    this.hizbQuarter,
-    this.sajda,
+    this.text,
+    this.audio,
+    this.translation,
   });
 
-  factory Ayah.fromJson(Map<String, dynamic> json) {
-    return Ayah(
+  factory Ayat.fromJson(Map<String, dynamic> json) {
+    return Ayat(
       number: json['number'],
-      text: json['text'],
       numberInSurah: json['numberInSurah'],
-      juz: json['juz'],
-      manzil: json['manzil'],
-      page: json['page'],
-      ruku: json['ruku'],
-      hizbQuarter: json['hizbQuarter'],
-      sajda: json['sajda'] ?? false,
+      text: json['text'],
+      audio: json['audio'],
     );
   }
 }
